@@ -1,0 +1,199 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cute Calculator</title>
+    <!-- Use Tailwind CSS for a clean, responsive design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Import a cute, rounded font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the body and font */
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #e0e7ff; /* A soft, lavender background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        /* Style for all buttons */
+        .button {
+            transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Calculator container -->
+    <div class="bg-violet-100 rounded-3xl shadow-xl p-6 w-full max-w-sm">
+
+        <!-- Calculator display -->
+        <div id="calculator-display" class="bg-white text-right text-5xl p-5 mb-5 rounded-2xl font-bold text-gray-800 break-words overflow-hidden">0</div>
+
+        <!-- Button grid -->
+        <div class="grid grid-cols-4 gap-4">
+
+            <!-- Row 1 -->
+            <button class="col-span-2 button button-clear bg-red-300 text-white hover:bg-red-400 font-extrabold text-2xl rounded-2xl p-4">C</button>
+            <button class="button button-operator bg-emerald-200 text-gray-800 hover:bg-emerald-300 font-extrabold text-2xl rounded-2xl p-4">/</button>
+            <button class="button button-operator bg-emerald-200 text-gray-800 hover:bg-emerald-300 font-extrabold text-2xl rounded-2xl p-4">*</button>
+
+            <!-- Row 2 -->
+            <button class="button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">7</button>
+            <button class="button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">8</button>
+            <button class="button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">9</button>
+            <button class="button button-operator bg-emerald-200 text-gray-800 hover:bg-emerald-300 font-extrabold text-2xl rounded-2xl p-4">-</button>
+
+            <!-- Row 3 -->
+            <button class="button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">4</button>
+            <button class="button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">5</button>
+            <button class="button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">6</button>
+            <button class="button button-operator bg-emerald-200 text-gray-800 hover:bg-emerald-300 font-extrabold text-2xl rounded-2xl p-4">+</button>
+
+            <!-- Row 4 -->
+            <button class="button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">1</button>
+            <button class="button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">2</button>
+            <button class="button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">3</button>
+            <button class="col-span-2 button button-equals bg-violet-400 text-white hover:bg-violet-500 font-extrabold text-2xl rounded-2xl p-4">=</button>
+            
+            <!-- Row 5 -->
+            <button class="col-span-2 button button-number bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">0</button>
+            <button class="button button-decimal bg-blue-200 text-gray-800 hover:bg-blue-300 font-extrabold text-2xl rounded-2xl p-4">.</button>
+        </div>
+    </div>
+
+    <script>
+        // Select the display element and all the buttons
+        const display = document.getElementById('calculator-display');
+        const numberButtons = document.querySelectorAll('.button-number');
+        const operatorButtons = document.querySelectorAll('.button-operator');
+        const clearButton = document.querySelector('.button-clear');
+        const equalsButton = document.querySelector('.button-equals');
+        const decimalButton = document.querySelector('.button-decimal');
+
+        // State variables to keep track of the calculator's state
+        let currentInput = '';
+        let firstOperand = null;
+        let operator = null;
+        let waitingForSecondOperand = false;
+
+        // Function to update the display
+        function updateDisplay() {
+            display.textContent = currentInput || '0';
+        }
+
+        // Handle number button clicks
+        function handleNumberClick(event) {
+            const number = event.target.textContent;
+            if (waitingForSecondOperand) {
+                currentInput = number;
+                waitingForSecondOperand = false;
+            } else {
+                // Prevent leading zeros unless it's a decimal
+                currentInput = currentInput === '0' ? number : currentInput + number;
+            }
+            updateDisplay();
+        }
+
+        // Handle operator button clicks
+        function handleOperatorClick(event) {
+            const nextOperator = event.target.textContent;
+
+            // If an operator is already selected, perform the previous calculation first
+            if (operator && !waitingForSecondOperand) {
+                // The equals() function handles the calculation
+                equals(); 
+            }
+
+            // Store the current input as the first operand and the new operator
+            firstOperand = parseFloat(currentInput);
+            operator = nextOperator;
+            waitingForSecondOperand = true;
+        }
+
+        // Handle equals button click
+        function equals() {
+            if (operator === null || waitingForSecondOperand) {
+                return; // Do nothing if there's no pending operation
+            }
+
+            const secondOperand = parseFloat(currentInput);
+            let result;
+
+            // Perform the calculation based on the stored operator
+            switch (operator) {
+                case '+':
+                    result = firstOperand + secondOperand;
+                    break;
+                case '-':
+                    result = firstOperand - secondOperand;
+                    break;
+                case '*':
+                    result = firstOperand * secondOperand;
+                    break;
+                case '/':
+                    // Handle division by zero
+                    if (secondOperand === 0) {
+                        result = 'Error';
+                    } else {
+                        result = firstOperand / secondOperand;
+                    }
+                    break;
+                default:
+                    return;
+            }
+
+            // Update the state with the result
+            currentInput = String(result);
+            firstOperand = null;
+            operator = null;
+            waitingForSecondOperand = false;
+            updateDisplay();
+        }
+
+        // Handle clear button click (resets all state)
+        function clear() {
+            currentInput = '';
+            firstOperand = null;
+            operator = null;
+            waitingForSecondOperand = false;
+            updateDisplay();
+        }
+
+        // Handle decimal point click
+        function handleDecimalClick() {
+            // Only add a decimal if one doesn't already exist in the current input
+            if (!currentInput.includes('.')) {
+                currentInput += '.';
+            }
+            updateDisplay();
+        }
+
+        // Add event listeners to all buttons
+        numberButtons.forEach(button => {
+            button.addEventListener('click', handleNumberClick);
+        });
+
+        operatorButtons.forEach(button => {
+            button.addEventListener('click', handleOperatorClick);
+        });
+
+        clearButton.addEventListener('click', clear);
+        equalsButton.addEventListener('click', equals);
+        decimalButton.addEventListener('click', handleDecimalClick);
+
+        // Initial display update
+        updateDisplay();
+    </script>
+</body>
+</html> 
